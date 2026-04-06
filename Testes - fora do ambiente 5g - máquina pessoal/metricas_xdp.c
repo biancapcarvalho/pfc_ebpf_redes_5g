@@ -12,7 +12,7 @@ int extrair_metricas(struct xdp_md *ctx) {
 
     __u32 tamanho_pacote = data_end - data_start; // calcula o tamanho do pacote
 
-    struct ethhdr* eth = data_start; // estrutura padrao do cabeçalho ethernet
+    struct ethhdr* eth = data_start; // estrutura padrao do cabeçalho ethernet / camada de enlace
 
     if ((void *)(eth+1) > data_end) {
         // nao fazer nada se o cabeçalho for maior que o pacote

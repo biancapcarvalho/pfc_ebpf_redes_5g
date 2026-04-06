@@ -37,7 +37,7 @@ supports-priv-flags: no
 
 O driver de rede não suporta XDP nativo, pois é de rede sem fio. Nesse caso, usei o modo genérico, que chama o programa em um nível mais alto da pilha. Para o projeto devo utilizar com Ethernet para usar o modo nativo e ter as vantagens do XDP.
 
-## COMO RODAR OS PRORAMAS
+## COMO RODAR OS PRORAMAS MANUALMENTE
 
 ### Compilar - Opçao 01
 ```bash
@@ -83,4 +83,63 @@ ip link set dev wlp2s0 xdpgeneric off
 ### Monitorar o trace_pipe
 ```bash
 sudo cat /sys/kernel/debug/tracing/trace_pipe
+```
+
+## COMO RODAR O PRORAMA USANDO O MAKEFILE
+
+Dentro do makefile voce deve defini o nome do arquivo, o nome da interface de rede e o modo do xdp.
+
+No inicio do Makefile
+```Makefile
+# Valores padrão
+FILE ?= metricas_xdp.c
+IFACE ?= wlp2s0
+MODE ?= xdpgeneric
+```
+
+Definidos os valores voce pode executar as etapas separadamente sem precisar de comando longos.
+
+Para compilar
+```bash
+make build
+```
+
+Para anexar
+```bash
+make attach
+```
+
+Para verificar se foi anexado
+```bash
+make show
+```
+
+Para monitorar o trace_pipe
+```bash
+make trace
+```
+
+Para desanexar e remover os arquivos de compilaçao
+```bash
+make clean
+```
+
+![alt text](<usando_make.png>)
+
+Para fazer tudo de uma vez (menos o clean kk)
+```bash
+make load
+```
+
+![alt text](usando_make_load.png)
+
+Se nao quiser mudar os valores dentro do makefile, pode informar via linha de comando
+```bash
+make load FILE=nome_arquivo.c IFACE=nome_interface MODE=modo_xdp
+```
+
+Mas nesse caso voce deve executar o clean com os mesmos parametros!
+
+```bash
+make clean FILE=nome_arquivo.c IFACE=nome_interface MODE=modo_xdp
 ```
