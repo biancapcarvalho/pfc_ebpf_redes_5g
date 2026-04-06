@@ -37,7 +37,7 @@ supports-priv-flags: no
 
 O driver de rede não suporta XDP nativo, pois é de rede sem fio. Nesse caso, usei o modo genérico, que chama o programa em um nível mais alto da pilha. Para o projeto devo utilizar com Ethernet para usar o modo nativo e ter as vantagens do XDP.
 
-## COMO RODAR OS PRORAMAS MANUALMENTE
+## COMO RODAR OS PROGRAMAS MANUALMENTE
 
 ### Compilar - Opçao 01
 ```bash
@@ -85,7 +85,7 @@ ip link set dev wlp2s0 xdpgeneric off
 sudo cat /sys/kernel/debug/tracing/trace_pipe
 ```
 
-## COMO RODAR O PRORAMA USANDO O MAKEFILE
+## COMO RODAR O PROGRAMA USANDO O MAKEFILE
 
 Dentro do makefile voce deve defini o nome do arquivo, o nome da interface de rede e o modo do xdp.
 

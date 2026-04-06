@@ -4,6 +4,10 @@
 #include <linux/if_ether.h>
 #include <bpf/bpf_endian.h> // pro bpf_htons
 
+#include <linux/ip.h>
+#include <linux/ipv6.h>
+#include <linux/in.h> // para as constantes de protocolo
+
 SEC("xdp") // indica o hook
 int extrair_metricas(struct xdp_md *ctx) {
     // pela documentação, ponteiros de inicio e fim do pacote
@@ -28,9 +32,26 @@ int extrair_metricas(struct xdp_md *ctx) {
     if (eth->h_proto == bpf_htons(ETH_P_IP)) {
         // nao da pra comparar direto com ETH_P_IP por conta do tipo
         // usa o bpf_htons (host to network short) para converter pro formato de rede
-        bpf_printk("PACOTE IPv4 - TAMANHO = %u bytes\n", tamanho_pacote);
+
+        struct iphdr* ip = (struct iphdr *)(eth+1);
+
+        if ((void *)(ip+1) > data_end) return XDP_PASS;
+
+        if (ip->protocol == IPPROTO_TCP) {
+            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO TCP", tamanho_pacote, &ip->saddr, &ip->daddr);
+        } else if (ip->protocol == IPPROTO_UDP) {
+            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO UDP", tamanho_pacote, &ip->saddr, &ip->daddr);
+        }
     } else if (eth->h_proto == bpf_htons(ETH_P_IPV6)) {
-        bpf_printk("PACOTE IPv6 - TAMANHO = %u bytes\n", tamanho_pacote);
+        struct ipv6hdr* ipv6 = (struct ipv6hdr *)(eth+1);
+
+        if ((void *)(ipv6+1) > data_end) return XDP_PASS;
+
+        if (ipv6->nexthdr == IPPROTO_TCP) {
+            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO TCP", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+        } else if (ipv6->nexthdr == IPPROTO_UDP) {
+            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO UDP", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+        }
     }
 
     return XDP_PASS; // só envia o pacote
