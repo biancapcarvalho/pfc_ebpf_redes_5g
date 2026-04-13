@@ -1,6 +1,5 @@
-# Valores padrão caso não passe os argumentos no terminal
 FILE ?= metricas_xdp.c
-IFACE ?= wlp2s0
+IFACE ?= lo
 MODE ?= xdpgeneric
 
 # Converte o nome do arquivo .c para .o
@@ -21,7 +20,6 @@ show:
 trace:
 	sudo cat /sys/kernel/debug/tracing/trace_pipe
 
-# Alvo utilitário para limpar e desanexar o programa
 clean:
 	sudo ip link set dev $(IFACE) $(MODE) off
 	rm -f *.o

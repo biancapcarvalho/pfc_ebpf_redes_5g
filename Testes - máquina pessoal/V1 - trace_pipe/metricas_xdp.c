@@ -2,11 +2,14 @@
 #include <bpf/bpf_helpers.h>
 
 #include <linux/if_ether.h>
-#include <bpf/bpf_endian.h> // pro bpf_htons
+#include <bpf/bpf_endian.h> // pro bpf_htons e bpf_ntons
 
 #include <linux/ip.h>
 #include <linux/ipv6.h>
 #include <linux/in.h> // para as constantes de protocolo
+
+#include <linux/tcp.h>
+#include <linux/udp.h>
 
 SEC("xdp") // indica o hook
 int extrair_metricas(struct xdp_md *ctx) {
@@ -38,9 +41,19 @@ int extrair_metricas(struct xdp_md *ctx) {
         if ((void *)(ip+1) > data_end) return XDP_PASS;
 
         if (ip->protocol == IPPROTO_TCP) {
-            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO TCP", tamanho_pacote, &ip->saddr, &ip->daddr);
+            struct tcphdr* tcp = (struct tcphdr *)(ip+1);
+
+            if ((void *)(tcp+1) > data_end) return XDP_PASS;
+
+            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4", tamanho_pacote, &ip->saddr, &ip->daddr);
+            bpf_printk("\nPROTOCOLO TCP\nPORTA ORIGEM = %u\nPORTA DESTINO = %u", bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest));
         } else if (ip->protocol == IPPROTO_UDP) {
-            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO UDP", tamanho_pacote, &ip->saddr, &ip->daddr);
+            struct udphdr* udp = (struct udphdr *)(ip+1);
+
+            if ((void *)(udp+1) > data_end) return XDP_PASS;
+
+            bpf_printk("\nPACOTE IPv4\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4", tamanho_pacote, &ip->saddr, &ip->daddr);
+            bpf_printk("\nPROTOCOLO UDP\nPORTA ORIGEM = %u\nPORTA DESTINO = %u", bpf_ntohs(udp->source), bpf_ntohs(udp->dest));
         }
     } else if (eth->h_proto == bpf_htons(ETH_P_IPV6)) {
         struct ipv6hdr* ipv6 = (struct ipv6hdr *)(eth+1);
@@ -48,9 +61,19 @@ int extrair_metricas(struct xdp_md *ctx) {
         if ((void *)(ipv6+1) > data_end) return XDP_PASS;
 
         if (ipv6->nexthdr == IPPROTO_TCP) {
-            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO TCP", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+            struct tcphdr* tcp = (struct tcphdr *)(ipv6+1);
+
+            if ((void *)(tcp+1) > data_end) return XDP_PASS;
+
+            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI6c\nIP DESTINO = %pI6c", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+            bpf_printk("\nPROTOCOLO TCP\nPORTA ORIGEM = %u\nPORTA DESTINO = %u", bpf_ntohs(tcp->source), bpf_ntohs(tcp->dest));
         } else if (ipv6->nexthdr == IPPROTO_UDP) {
-            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI4\nIP DESTINO = %pI4\nPROTOCOLO UDP", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+            struct udphdr* udp = (struct udphdr *)(ipv6+1);
+
+            if ((void *)(udp+1) > data_end) return XDP_PASS;
+
+            bpf_printk("\nPACOTE IPv6\nTAMANHO = %u bytes\nIP ORIGEM = %pI6c\nIP DESTINO = %pI6c", tamanho_pacote, &ipv6->saddr, &ipv6->daddr);
+            bpf_printk("\nPROTOCOLO UDP\nPORTA ORIGEM = %u\nPORTA DESTINO = %u", bpf_ntohs(udp->source), bpf_ntohs(udp->dest));
         }
     }
 
